@@ -54,8 +54,8 @@ class gitHubApi {
         .slice(0, width)
         .map( async (fullInfo) => {
           const user = {id: fullInfo.id, name: fullInfo.login};
-          if (depth > 0) {
-            user.followers = await gitHubApi.getFollowerTree(fullInfo.name, width, depth-1, authorization);
+          if (depth > 1) {
+            user.followers = await gitHubApi.getFollowerTree(fullInfo.login, width, depth-1, authorization);
           }
           return user;
         }));
@@ -81,7 +81,7 @@ class gitHubApi {
     const idResponse = await axios.get(`user/${id}`, axiosConfig).catch(console.log);
     if (idResponse) {
       const username = idResponse.data.login;
-      return gitHubApi.getFollowerTree(username, width, depth, authorization);      
+      return gitHubApi.getFollowerTree(username, width, depth, authorization);
     }
   }
 }
