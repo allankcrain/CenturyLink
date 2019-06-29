@@ -13,7 +13,21 @@ const app = express();
 
 /** A root route so it doesn't just die if you go to slash. */
 app.get('/', (req,res) => {
-  res.send("Usage: /followertree/[GitHub username]?width=X&depth=Y");
+  console.log(req.headers);
+  res.send(`
+    <html>
+      <head>
+        <title>CenturyLink Coding Challenge</title>
+      </head>
+      <body>
+      Usage: <br/>
+      <pre>
+    /followertree/username/[GitHub username]
+    /followertree/id/[GitHub user ID]
+      </pre>
+      </body>
+    </html>
+  `);
 });
 
 /**
@@ -27,10 +41,11 @@ app.get('/', (req,res) => {
  */
 app.get('/followertree/:by/:usernameOrId/', async (req,res) => {
   // Get the width and depth arguments (if any; default to our constants) from the request query.
-  const {width=DEFAULT_WIDTH, depth=DEFAULT_DEPTH} = req.query;
+  const {width=DEFAULT_WIDTH, depth=DEFAULT_DEPTH} = req.query
+  const {authorization=null} = req.headers;
   const tree = req.params.by==='username' ?
-    await gitHubApi.getFollowerTree(req.params.usernameOrId, width, depth) :
-    await gitHubApi.getFollowerTreeById(req.params.usernameOrId, width, depth);
+    await gitHubApi.getFollowerTree(req.params.usernameOrId, width, depth, authorization) :
+    await gitHubApi.getFollowerTreeById(req.params.usernameOrId, width, depth, authorization);
   res.send(JSON.stringify(tree));
 });
 
