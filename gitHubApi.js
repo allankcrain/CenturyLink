@@ -1,26 +1,31 @@
 const axios = require('axios');
 
+// GitHub API constants
+const GITHUB_BASE_URL = 'https://api.github.com/'
+const GITHUB_API_VER  = 'application/vnd.github.v3+json'
+
 /**
  * GitHub API helper functions.
  */
 class gitHubApi {
   /**
-   * Get the Axios configuration for the API.
-   * @param {string} authorization - Authorization header to pass (if any)
-   * @return {Object} Axios config object
+   * gitHubApi class constructor.
+   *
+   * Sets up a custom Axios object with the API version, base URL, and (optionally) authorization headers.
    */
-  static getAxiosConfig(authorization=null) {
+  constructor(authorization) {
     const axiosConfig = {
-      baseURL: 'https://api.github.com/',
+      baseURL: GITHUB_BASE_URL,
       headers: {
         // GitHub's API docs recommend being explicit about the API version accepted
-        'Accept': 'application/vnd.github.v3+json',
+        'Accept': GITHUB_API_VER,
       }
     };
     if (authorization) {
       axiosConfig.headers.authorization = authorization;
     }
-    return axiosConfig;
+
+    this.net = axios.create(axiosConfig);
   }
 
   /**
@@ -32,12 +37,9 @@ class gitHubApi {
    * @param {string} authorization - Authorization header to pass to the GitHub API
    * @return {Promise} Promise that resolves into an object describing the follower tree from the root username.
    */
-  static async getFollowerTree(username, width, depth, authorization) {
-    // Set up axios headers.
-    const axiosConfig = gitHubApi.getAxiosConfig(authorization);
-
+  async getFollowerTree(username, width, depth) {
     // Get the followers from Github's API
-    const followerResponse = await axios.get(`users/${username}/followers`, axiosConfig).catch(console.log);
+    const followerResponse = await this.net.get(`users/${username}/followers`).catch(console.log);
     // Build the follower tree for the returned followers.
     let tree = [];
     if (followerResponse) {
@@ -55,12 +57,22 @@ class gitHubApi {
         .map( async (fullInfo) => {
           const user = {id: fullInfo.id, name: fullInfo.login};
           if (depth > 1) {
-            user.followers = await gitHubApi.getFollowerTree(fullInfo.login, width, depth-1, authorization);
+            user.followers = await this.getFollowerTree(fullInfo.login, width, depth-1);
           }
           return user;
         }));
     }
     return tree;
+  }
+
+  /**
+   * Get a user's username given their GitHub ID number.
+   *
+   * @param {int} id - GitHub user ID
+   */
+  async getUsernameFromId(id) {
+    const idResponse = await this.net.get(`user/${id}`).catch(console.log);
+    return idResponse.data.login;
   }
 
   /**
@@ -71,17 +83,14 @@ class gitHubApi {
    * @param {int} id - The user ID of the user at the top of this tree.
    * @param {int} width - The number of direct children to return
    * @param {int} depth - How far down the tree to go
-   * @param {string} authorization - Authorization header to pass to the GitHub API
    * @return {Promise} Promise that resolves into an object describing the follower tree from the root username.
    */
-  static async getFollowerTreeById(id, width, depth, authorization) {
-    // Set up axios headers.
-    const axiosConfig = gitHubApi.getAxiosConfig(authorization);
+  async getFollowerTreeById(id, width, depth) {
     // Get the user's username based on their ID.
-    const idResponse = await axios.get(`user/${id}`, axiosConfig).catch(console.log);
+    const idResponse = await this.net.get(`user/${id}`).catch(console.log);
     if (idResponse) {
       const username = idResponse.data.login;
-      return gitHubApi.getFollowerTree(username, width, depth, authorization);
+      return this.getFollowerTree(username, width, depth);
     }
   }
 }

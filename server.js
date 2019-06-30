@@ -40,12 +40,18 @@ app.get('/', (req,res) => {
  * @example http://localhost:8000/followertree/id/12345?width=3
  */
 app.get('/followertree/:by/:usernameOrId/', async (req,res) => {
+  // Set up our API object.
+  const api = new gitHubApi(req.headers.authorization);
+
+  // Get the username. This will either be passed in explicitly or passed in as
+  // an ID number and we'll need to hit the API to translate that to a username.
+  const username = req.params.by === 'id' ?
+    await api.getUsernameFromId(req.params.usernameOrId) :
+    req.params.usernameOrId;
+
   // Get the width and depth arguments (if any; default to our constants) from the request query.
   const {width=DEFAULT_WIDTH, depth=DEFAULT_DEPTH} = req.query
-  const {authorization=null} = req.headers;
-  const tree = req.params.by==='username' ?
-    await gitHubApi.getFollowerTree(req.params.usernameOrId, width, depth, authorization) :
-    await gitHubApi.getFollowerTreeById(req.params.usernameOrId, width, depth, authorization);
+  const tree = await api.getFollowerTree(req.params.usernameOrId, width, depth);
   res.send(JSON.stringify(tree));
 });
 
