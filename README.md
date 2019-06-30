@@ -50,9 +50,9 @@ The API response will come back as a JSON-formatted tree shaped like so:
 
 * There are a few improvements that I would definitely want to make if this were a legitimate piece of software instead of just a test programming challenge. Namely:
   * Better error handling.
-  * Better support for authentication. Ideally, some sort of system using OAuth. If nothing else, I'd refactor the authentication argument being passed to each API function individually into a class member. I didn't realize how quickly I'd be rate-limited on the API without authentication when I decided on the current architecture.
+  * Better support for authentication. Ideally, some sort of system using OAuth.
   * More graceful handling of GitHub rate limiting (which can be a pretty big issue if you're repeatedly testing code that hits their APIs 3*5 times in rapid succession).
   * Filter out duplicate users from follower loops (i.e., person A follows person B who follows person A back).
 * The challenge description asks that the API work with GitHub *IDs*, but the API is designed to work with GitHub *usernames*. I wasn't sure if that was part of the challenge or if it was a mistake, so I wrote the API to support both to cover my bases. The GitHub API used to convert ID numbers into usernames appears to be itself undocumented (I found it through a Stackexchange post from 2012 that lamented that it wasn't documented).
-* Special thanks to Anna Henningsen, github user addaleax, the answer to the question "Who's a random GitHub user with a bunch of followers I can use for testing?"
-* The challenge text was somewhat ambiguous about how it defines depth. I wrote it to assume that 3 levels deep means that it retrieves followers, grandfollowers, and great-grandfollowers (i.e., the initial user passed in is not included in the follower depth).
+* Special thanks to Anna Henningsen (github user addaleax), the answer to the question "Who's a random GitHub user with a bunch of followers I can use for testing?"
+* The challenge text was somewhat ambiguous about how it defines depth. I wrote it to assume that 3 levels deep means that it retrieves followers, grandfollowers, and great-grandfollowers (i.e., the initial user passed in is not included in the follower depth, but the first level of followers returned is).

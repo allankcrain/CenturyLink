@@ -51,7 +51,9 @@ app.get('/followertree/:by/:usernameOrId/', async (req,res) => {
 
   // Get the width and depth arguments (if any; default to our constants) from the request query.
   const {width=DEFAULT_WIDTH, depth=DEFAULT_DEPTH} = req.query
-  const tree = await api.getFollowerTree(req.params.usernameOrId, width, depth);
+
+  // Get the follower tree and output it in JSON format.
+  const tree = await api.getFollowerTree(username, width, depth);
   res.send(JSON.stringify(tree));
 });
 

@@ -34,7 +34,6 @@ class gitHubApi {
    * @param {string} username - The username of the user at the top of this tree.
    * @param {int} width - The number of direct children to return
    * @param {int} depth - How far down the tree to go
-   * @param {string} authorization - Authorization header to pass to the GitHub API
    * @return {Promise} Promise that resolves into an object describing the follower tree from the root username.
    */
   async getFollowerTree(username, width, depth) {
@@ -73,25 +72,6 @@ class gitHubApi {
   async getUsernameFromId(id) {
     const idResponse = await this.net.get(`user/${id}`).catch(console.log);
     return idResponse.data.login;
-  }
-
-  /**
-   * Get a tree of GitHub followers for the given GitHub ID.
-   *
-   * Uses github's /user/:id API to look up the user's username, then punts to getFollowerTree.
-   *
-   * @param {int} id - The user ID of the user at the top of this tree.
-   * @param {int} width - The number of direct children to return
-   * @param {int} depth - How far down the tree to go
-   * @return {Promise} Promise that resolves into an object describing the follower tree from the root username.
-   */
-  async getFollowerTreeById(id, width, depth) {
-    // Get the user's username based on their ID.
-    const idResponse = await this.net.get(`user/${id}`).catch(console.log);
-    if (idResponse) {
-      const username = idResponse.data.login;
-      return this.getFollowerTree(username, width, depth);
-    }
   }
 }
 
