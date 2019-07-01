@@ -29,16 +29,16 @@ class gitHubApi {
   }
 
   /**
-   * Get a tree of GitHub followers for the given GitHub username.
+   * Get a tree of GitHub followers for the given GitHub login.
    *
-   * @param {string} username - The username of the user at the top of this tree.
+   * @param {string} login - The login of the user at the top of this tree.
    * @param {int} width - The number of direct children to return
    * @param {int} depth - How far down the tree to go
-   * @return {Promise} Promise that resolves into an object describing the follower tree from the root username.
+   * @return {Promise} Promise that resolves into an object describing the follower tree from the root login.
    */
-  async getFollowerTree(username, width, depth) {
+  async getFollowerTree(login, width, depth) {
     // Get the followers from Github's API
-    const followerResponse = await this.net.get(`users/${username}/followers`).catch(console.log);
+    const followerResponse = await this.net.get(`users/${login}/followers`).catch(console.log);
     // Build the follower tree for the returned followers.
     let tree = [];
     if (followerResponse) {
@@ -47,14 +47,14 @@ class gitHubApi {
       //    generating an array of Promise objects (and possibly a whole tree
       //    of them)
       // 2. Slices out just the number of followers from the width argument
-      // 3. Maps an {id, name} object for each follower, potentially also
+      // 3. Maps an {id, login} object for each follower, potentially also
       //    with a follower member for a subtree of followers (calling this
       //    function recursively to generate it) if we're not at our depth
       //    limit yet.
       tree = await Promise.all(followerResponse.data
         .slice(0, width)
         .map( async (fullInfo) => {
-          const user = {id: fullInfo.id, name: fullInfo.login};
+          const user = {id: fullInfo.id, login: fullInfo.login};
           if (depth > 1) {
             user.followers = await this.getFollowerTree(fullInfo.login, width, depth-1);
           }
@@ -68,30 +68,30 @@ class gitHubApi {
   /**
    * Get a tree of repositories, their stargazers, and their stargazers' repositories.
    *
-   * @param {string} username - Name of the user whose repositories should start the tree
+   * @param {string} login - Login name of the user whose repositories should start the tree
    * @param {int} width - Number of repositories/stargazers to return at each level.
    * @param {int} depth - Depth of results to return.
    * @return {object} Repo/Stargazer tree.
    */
-  async getRepoStargazers(username, width, depth) {
+  async getRepoStargazers(login, width, depth) {
     // Get the list of repositories for the requested user.
-    const repoResponse = await this.net.get(`users/${username}/repos`).catch(console.log);
+    const repoResponse = await this.net.get(`users/${login}/repos`).catch(console.log);
     let tree = [];
     if (repoResponse) {
       // Go through all of the repositories and get the data we care about
-      // (the name and the stargazers)
+      // (the repo name and the stargazers)
       tree = await Promise.all(repoResponse.data
         .slice(0, width)
         .map( async (repoInfo) => {
           const name = repoInfo.name;
           const repo = {name};
           // Get the Stargazers for this repo.
-          const stargazersResponse = await this.net.get(`repos/${username}/${name}/stargazers`).catch(console.log);
+          const stargazersResponse = await this.net.get(`repos/${login}/${name}/stargazers`).catch(console.log);
           if (stargazersResponse) {
             const stargazers = await Promise.all(stargazersResponse.data
               .slice(0, width)
               .map( async (sgInfo) => {
-                const stargazer = {name: sgInfo.login, id: sgInfo.id};
+                const stargazer = {login: sgInfo.login, id: sgInfo.id};
                 // Recurse if we haven't hit our depth limit.
                 if (depth > 1) {
                   stargazer.repos = await this.getRepoStargazers(sgInfo.login, width, depth-1);
@@ -108,12 +108,12 @@ class gitHubApi {
   }
 
   /**
-   * Get a user's username given their GitHub ID number.
+   * Get a user's login given their GitHub ID number.
    *
    * @param {int} id - GitHub user ID
-   * @return {string} GitHub Username
+   * @return {string} GitHub login
    */
-  async getUsernameFromId(id) {
+  async getloginFromId(id) {
     const idResponse = await this.net.get(`user/${id}`).catch(console.log);
     return idResponse.data.login;
   }

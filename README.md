@@ -22,9 +22,9 @@ The bonus challenge was to:
 
 ### Testing
 
-By default, the server starts up on port 8000. The main endpoint is `/followertree/username/[username]`, which can be accessed either simply through a web browser (`http://localhost:8000/followertree/username/allankcrain`) or through an application such as Postman.
+By default, the server starts up on port 8000. The main endpoint is `/followertree/login/[login]`, which can be accessed either simply through a web browser (`http://localhost:8000/followertree/login/allankcrain`) or through an application such as Postman.
 
-There is also a secondary API endpoint `/followertree/id/[id]` which operates identically (other than taking a GitHub ID instead of a username--see Notes section below).
+There is also a secondary API endpoint `/followertree/id/[id]` which operates identically (other than taking a GitHub ID instead of a login--see Notes section below).
 
 The APIs accept optional GET parameters for width and depth limits on the returned trees. By default, it uses a width of 5 and a depth of 3.
 
@@ -35,30 +35,30 @@ The API response will come back as a JSON-formatted tree shaped like so:
 ~~~~
 [
   {
-    id: 12345,
-    name: 'johndoe',
-    followers:
+    'id': 12345,
+    'login': 'johndoe',
+    'followers':
       [
         {
-          id: 12346,
-          name: 'johndoejr'
+          'id': 12346,
+          'login': 'johndoejr'
         },
         {
-          id: 24601,
-          name: 'jeanvaljean'
+          'id': 24601,
+          'login': 'jeanvaljean'
         }
       ],
   },
   {
-   id: 1066,
-   name: 'hastings'     
+   'id': 1066,
+   'login': 'hastings'     
   }
 ]
 ~~~~
 
 ### Bonus API
 
-I also went ahead and did the bonus challenge, although it's not as well-tested. The bonus API is accessible at `/repostargazers/username/[username]` or `/repostargazers/id/[user ID]` and takes the same arguments and has the same semantics as the followers API. It returns an object like this:
+I also went ahead and did the bonus challenge, although it's not as well-tested. The bonus API is accessible at `/repostargazers/login/[login]` or `/repostargazers/id/[user ID]` and takes the same arguments and has the same semantics as the followers API. It returns an object like this:
 
 ~~~~
 [
@@ -66,7 +66,7 @@ I also went ahead and did the bonus challenge, although it's not as well-tested.
         "name": "libdc-for-dirk",
         "stargazers": [
             {
-                "name": "git-hulk",
+                "login": "git-hulk",
                 "id": 4987594,
                 "repos": [
                     {
@@ -91,7 +91,7 @@ Note that the width argument for this API applies to both the number of reposito
   * More graceful handling of GitHub rate limiting (which can be a pretty big issue if you're repeatedly testing code that hits their APIs 1+(3*5) times in rapid succession).
   * Enforce an upper limit on the depth/width arguments. Rate limiting on the GitHub side should keep this from being a viable strategy to DDOS GitHub as is, but it's still something I'd want to take care of myself in real live code just to be sure.
   * Currently, the code in server.js that handles the two APIs is virtually identical, which is big code smell. If I found myself repeating that code pattern any more, I'd want to refactor that out to minimize the duplication.
-* The challenge description asks that the API work with GitHub *IDs*, but the API is designed to work with GitHub *usernames*. I wasn't sure if that was part of the challenge or if it was a mistake, so I wrote the API to support both to cover my bases. The GitHub API used to convert ID numbers into usernames appears to be itself undocumented (I found it through a Stackexchange post from 2012 that lamented that it wasn't documented).
-* Special thanks to Anna Henningsen (github user addaleax), the answer to the question "Who's a random GitHub user with a bunch of followers I can use for testing?"
-* Similarly, special thanks to Linus Torvalds, the answer to the question "Who's a GitHub user whose repositories are so famous that they would have a bunch of stargazers". Also thanks to Linus for creating Linux.
+* The challenge description asks that the API work with GitHub *IDs*, but the API is designed to work with GitHub *logins*. I wasn't sure if that was part of the challenge or if it was a mistake, so I wrote the API to support both to cover my bases. The GitHub API used to convert ID numbers into logins appears to be itself undocumented (I found it through a StackExchange post from 2012 that also lamented that it wasn't documented, so its undocumented nature is certainly problematic, but the fact that it's been stable for at least 7 years is some comfort).
+* Special thanks to Anna Henningsen (GitHub user addaleax), the answer to the question "Who's a random GitHub user with a bunch of followers I can use for testing?"
+* Similarly, special thanks to Linus Torvalds (GitHub user torvalds), the answer to the question "Who's a GitHub user whose repositories are so famous that they would have a bunch of stargazers". Also thanks to Linus for creating Linux.
 * The challenge text was somewhat ambiguous about how it defines depth. I wrote it to assume that 3 levels deep means that it retrieves followers, grandfollowers, and great-grandfollowers (i.e., the initial user passed in is not included in the follower depth, but the first level of followers returned is).
