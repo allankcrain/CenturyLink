@@ -1,8 +1,8 @@
 const axios = require('axios');
 
 // GitHub API constants
-const GITHUB_BASE_URL = 'https://api.github.com/'
-const GITHUB_API_VER  = 'application/vnd.github.v3+json'
+const GITHUB_BASE_URL = 'https://api.github.com/';
+const GITHUB_API_VER  = 'application/vnd.github.v3+json';
 
 /**
  * GitHub API helper functions.
@@ -59,7 +59,50 @@ class gitHubApi {
             user.followers = await this.getFollowerTree(fullInfo.login, width, depth-1);
           }
           return user;
-        }));
+        })
+      );
+    }
+    return tree;
+  }
+
+  /**
+   * Get a tree of repositories, their stargazers, and their stargazers' repositories.
+   *
+   * @param {string} username - Name of the user whose repositories should start the tree
+   * @param {int} width - Number of repositories/stargazers to return at each level.
+   * @param {int} depth - Depth of results to return.
+   * @return {object} Repo/Stargazer tree.
+   */
+  async getRepoStargazers(username, width, depth) {
+    // Get the list of repositories for the requested user.
+    const repoResponse = await this.net.get(`users/${username}/repos`).catch(console.log);
+    let tree = [];
+    if (repoResponse) {
+      // Go through all of the repositories and get the data we care about
+      // (the name and the stargazers)
+      tree = await Promise.all(repoResponse.data
+        .slice(0, width)
+        .map( async (repoInfo) => {
+          const name = repoInfo.name;
+          const repo = {name};
+          // Get the Stargazers for this repo.
+          const stargazersResponse = await this.net.get(`repos/${username}/${name}/stargazers`).catch(console.log);
+          if (stargazersResponse) {
+            const stargazers = await Promise.all(stargazersResponse.data
+              .slice(0, width)
+              .map( async (sgInfo) => {
+                const stargazer = {name: sgInfo.login, id: sgInfo.id};
+                // Recurse if we haven't hit our depth limit.
+                if (depth > 1) {
+                  stargazer.repos = await this.getRepoStargazers(sgInfo.login, width, depth-1);
+                }
+                return stargazer;
+              }));
+            repo.stargazers = stargazers;
+          }
+          return repo;
+        })
+      );
     }
     return tree;
   }
@@ -68,6 +111,7 @@ class gitHubApi {
    * Get a user's username given their GitHub ID number.
    *
    * @param {int} id - GitHub user ID
+   * @return {string} GitHub Username
    */
   async getUsernameFromId(id) {
     const idResponse = await this.net.get(`user/${id}`).catch(console.log);
